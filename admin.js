@@ -35,6 +35,8 @@ const validTypes = {
   'image/png': 'png',
   'image/x-png': 'png',
   'image/webp': 'webp'
+};
+
 const configured =
   SUPABASE_URL.startsWith('https://') &&
   !SUPABASE_ANON_KEY.includes('PEGA_AQUI');
