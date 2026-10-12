@@ -27,7 +27,6 @@ const money = amount =>
 // LIMITE DE FOTOGRAFIAS: 50 MB
 const BUCKET = 'product-images';
 const MAX_IMAGE_BYTES = 50 * 1024 * 1024;
-
 const validTypes = {
   'image/jpeg': 'jpg',
   'image/jpg': 'jpg',
@@ -40,7 +39,6 @@ const validTypes = {
 const configured =
   SUPABASE_URL.startsWith('https://') &&
   !SUPABASE_ANON_KEY.includes('PEGA_AQUI');
-
 const db = configured
   ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   : null;
