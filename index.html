@@ -1,3 +1,232 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#101b32"><title>Darth Vader tienda Hotwheels | Catálogo 1:64</title><link rel="stylesheet" href="styles.css"></head>
-<body><header class="top"><div class="wrap nav"><a class="brand" href="./">🏁 <span data-store>Mi Tienda</span></a><nav><a href="#catalogo">Productos</a><button id="cartButton" class="pill">🛒 Carrito <span id="cartCount">0</span></button><a class="admin-link" href="admin.html">Administrador ↗</a></nav></div></header><main><section class="hero"><div class="wrap"><span class="eyebrow">DIECAST · ESCALA 1:64</span><h1>Tu próxima joya<br><em>sobre cuatro ruedas.</em></h1><p>Colecciona tus modelos favoritos: Mainline, Premium, Treasure Hunt y más. Revisa el stock y haz tu pedido por WhatsApp.</p><a class="primary" href="#catalogo">Ver productos ↓</a></div></section><section class="wrap section" id="catalogo"><div class="sectionHead"><div><span class="eyebrow dark">COLECCIÓN DISPONIBLE</span><h2>Explora el garaje</h2></div><div class="controls"><input id="search" type="search" placeholder="Buscar por auto o fabricante…" aria-label="Buscar productos"><select id="category" aria-label="Categoría"><option value="">Todas las categorías</option></select></div></div><p id="status" class="muted">Cargando catálogo…</p><div id="products" class="products"></div></section></main><footer class="wrap footer">Coleccionables a escala 1:64 · © <span data-store>Mi Tienda</span> · Catálogo en línea</footer>
-<dialog id="cartDialog"><div class="dialogTitle"><h2>Tu carrito</h2><button id="closeCart" class="ghost" aria-label="Cerrar">✕</button></div><div id="cartLines"></div><div class="cartTotal">Total del pedido <b id="cartTotal">$0,00</b></div><form id="checkout"><h3>Datos del pedido</h3><label>Tu nombre<input id="customerName" required maxlength="100" autocomplete="name"></label><label>WhatsApp / teléfono<input id="customerPhone" required maxlength="30" autocomplete="tel"></label><label>Dirección o referencia de entrega (opcional)<textarea id="customerAddress" maxlength="400"></textarea></label><label>Observaciones (opcional)<textarea id="customerNotes" maxlength="400"></textarea></label><button class="primary full" type="submit">Registrar y enviar por WhatsApp</button><p id="checkoutStatus" class="muted tiny" role="status"></p></form></dialog><script type="module" src="shop.js"></script></body></html>
+
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#070d1c">
+  <meta name="description" content="Darth Vader tienda Hotwheels: coleccionables a escala 1:64 en Ambato, Ecuador. Envíos a todo el país.">
+  <title>Darth Vader tienda Hotwheels | Ambato, Ecuador</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="wrap nav">
+      <a class="brand" href="./">
+        🏁 <span data-store>Darth Vader tienda Hotwheels</span>
+      </a>
+      <nav>
+        <a href="#catalogo">Productos</a>
+        <a href="#informacion">Pagos y envíos</a>
+        <button id="cartButton" class="pill" type="button">
+          🛒 Carrito <span id="cartCount">0</span>
+        </button>
+        <a class="admin-link" href="admin.html">Administrador ↗</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="wrap">
+        <span class="eyebrow">
+          DIECAST · ESCALA 1:64 · AMBATO, ECUADOR
+        </span>
+        <h1>Tu próxima joya<br>
+          <em>sobre cuatro ruedas.</em>
+        </h1>
+        <p>
+          Somos Darth Vader tienda Hotwheels, una tienda
+          de coleccionables ubicada en Ambato, Ecuador.
+          Descubre modelos Mainline, Premium, Treasure Hunt
+          y más, con envíos a todo el país.
+        </p>
+        <a class="primary" href="#catalogo">
+          Explorar productos ↓
+        </a>
+        <div class="hero-highlights">
+          <span>📍 Ambato, Ecuador</span>
+          <span>🚚 Envíos nacionales</span>
+          <span>💳 Transferencia o efectivo</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap section" id="catalogo">
+      <div class="sectionHead">
+        <div>
+          <span class="eyebrow dark">
+            COLECCIÓN DISPONIBLE
+          </span>
+          <h2>Explora el garaje</h2>
+          <p class="muted catalog-hint">
+            Toca la fotografía de un modelo para verla en grande.
+          </p>
+        </div>
+        <div class="controls">
+          <input id="search" type="search"
+            placeholder="Buscar por auto o fabricante…"
+            aria-label="Buscar productos">
+          <select id="category" aria-label="Categoría">
+            <option value="">Todas las categorías</option>
+          </select>
+        </div>
+      </div>
+      <p id="status" class="muted" role="status">
+        Cargando catálogo…
+      </p>
+      <div id="products" class="products"></div>
+    </section>
+
+    <section class="info-section" id="informacion">
+      <div class="wrap">
+        <span class="eyebrow dark">COMPRA CON NOSOTROS</span>
+        <h2>Desde Ambato para todo Ecuador</h2>
+        <p class="muted info-intro">
+          Elige tus Hot Wheels favoritos y coordina
+          la compra de forma sencilla por WhatsApp.
+        </p>
+
+        <div class="info-grid">
+          <article class="info-card">
+            <span class="info-icon" aria-hidden="true">📍</span>
+            <h3>Estamos en Ambato</h3>
+            <p>
+              Tienda de modelos a escala 1:64
+              ubicada en Ambato, Ecuador.
+            </p>
+          </article>
+
+          <article class="info-card">
+            <span class="info-icon" aria-hidden="true">💳</span>
+            <h3>Métodos de pago</h3>
+            <p>
+              Transferencia bancaria a
+              <strong>Banco Pichincha</strong> o
+              <strong>Produbanco</strong>, y
+              <strong>efectivo</strong> previa coordinación.
+            </p>
+            <p class="muted tiny">
+              Los datos bancarios se facilitan
+              al confirmar el pedido.
+            </p>
+          </article>
+
+          <article class="info-card">
+            <span class="info-icon" aria-hidden="true">🚚</span>
+            <h3>Envíos a todo el Ecuador</h3>
+            <p>
+              Realizamos envíos a nivel nacional.
+              El costo y la forma de entrega se
+              confirman por WhatsApp antes del despacho.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap footer">
+    <strong data-store>Darth Vader tienda Hotwheels</strong>
+    · Ambato, Ecuador · Envíos a todo el país
+    · Coleccionables 1:64
+  </footer>
+
+  <!-- VISOR DE FOTOGRAFIAS -->
+  <dialog id="imageDialog" class="image-dialog"
+    aria-label="Fotografía ampliada del producto">
+    <div class="dialogTitle">
+      <h2 id="zoomName">Fotografía del producto</h2>
+      <button id="closeImage" class="ghost"
+        type="button" aria-label="Cerrar fotografía">✕</button>
+    </div>
+    <img id="zoomImage" alt="" src="">
+    <p class="muted tiny zoom-tip">
+      Presiona ✕ o Escape para cerrar.
+    </p>
+  </dialog>
+
+  <!-- CARRITO DE COMPRAS -->
+  <dialog id="cartDialog">
+    <div class="dialogTitle">
+      <h2>Tu carrito</h2>
+      <button id="closeCart" class="ghost"
+        type="button" aria-label="Cerrar carrito">✕</button>
+    </div>
+    <div id="cartLines"></div>
+    <div class="cartTotal">
+      Total de productos
+      <b id="cartTotal">$0,00</b>
+    </div>
+    <p class="muted tiny">
+      Si solicitas envío nacional, el costo del transporte
+      se confirma por WhatsApp y no está incluido en
+      el total de productos.
+    </p>
+
+    <form id="checkout">
+      <h3>Datos del pedido</h3>
+
+      <label>Tu nombre
+        <input id="customerName" required
+          maxlength="100" autocomplete="name">
+      </label>
+
+      <label>WhatsApp / teléfono
+        <input id="customerPhone" required
+          maxlength="30" autocomplete="tel">
+      </label>
+
+      <label>Forma de entrega
+        <select id="deliveryMethod" required>
+          <option value="">Selecciona una opción</option>
+          <option value="ambato">
+            Entrega coordinada en Ambato
+          </option>
+          <option value="nacional">
+            Envío a otra ciudad de Ecuador
+          </option>
+        </select>
+      </label>
+
+      <label>Forma de pago
+        <select id="paymentMethod" required>
+          <option value="">Selecciona una opción</option>
+          <option value="pichincha">
+            Transferencia Banco Pichincha
+          </option>
+          <option value="produbanco">
+            Transferencia Produbanco
+          </option>
+          <option value="efectivo">
+            Efectivo (a coordinar)
+          </option>
+        </select>
+      </label>
+
+      <p class="muted tiny">
+        Para transferencias, te enviaremos los datos
+        bancarios al confirmar. El pago en efectivo
+        se coordina directamente con la tienda.
+      </p>
+
+      <label>Ciudad, dirección o referencia de entrega
+        <textarea id="customerAddress" maxlength="400"
+          placeholder="Indica ciudad y dirección si necesitas envío"></textarea>
+      </label>
+
+      <label>Observaciones (opcional)
+        <textarea id="customerNotes" maxlength="250"></textarea>
+      </label>
+
+      <button class="primary full" type="submit">
+        Registrar y enviar por WhatsApp
+      </button>
+      <p id="checkoutStatus" class="muted tiny"
+        role="status"></p>
+    </form>
+  </dialog>
+
+  <script type="module" src="shop.js"></script>
+</body>
+</html>
