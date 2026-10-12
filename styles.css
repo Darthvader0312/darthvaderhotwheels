@@ -2,3 +2,470 @@
 
 /* Darth Vader Hotwheels: garage nocturno y detalles racing */
 :root{color:#e9eef6;background:#0e1118}body{background:#11151e;color:#e6edf7}.top{background:#090b10;border-bottom:2px solid #f7c647}.brand{font-size:19px;letter-spacing:-.4px}.hero{background:radial-gradient(ellipse at 83% 30%,#60491d 0%,transparent 38%),linear-gradient(120deg,#0a0e17,#202734 60%,#10151e)}.hero h1 em{color:#ffd455}.hero p{color:#c6ccd6}.eyebrow,.eyebrow.dark{color:#f5c84c}.primary{background:#f5c647;color:#101318}.pill{border-color:#e8c044aa}.section{background:#11151e}.product,.loginBox,.metrics article,.tableWrap,.order{background:#1b2230;border-color:#313b4d;color:#edf2f7}.product img{background:#171c25}.tag{background:#3a311a;color:#ffd76b}.desc,.muted,.footer,.metrics span{color:#aab6c7}.old{color:#a5aab8}.stock{color:#7cdb9a}.stock.out{color:#ff8585}.product button{background:#40351c;color:#ffd86c}.product button:hover{background:#5c471c}.footer{border-color:#343b49}dialog{background:#1b2230;color:#f4f5f8}input,select,textarea{background:#101722;color:#edf2f7;border-color:#4a5669}th{background:#232d3d;color:#d6dbe4}td,th,.cartLine{border-color:#364154}.tabs{border-color:#334154}.tabs button{color:#c7d1df}.tabs button.active{color:#ffd455;border-color:#ffd455}.notice{background:#453819;color:#ffe9a6;border-color:#a27e22}.hero{position:relative}.hero:after{content:'1:64';position:absolute;right:6%;bottom:10%;color:#ffffff10;font-size:clamp(80px,14vw,220px);font-weight:900;pointer-events:none}.hero .wrap{position:relative;z-index:1}a:focus-visible,button:focus-visible{outline:3px solid #f5c647;outline-offset:3px}
+
+/* DARTH VADER HOTWHEELS
+   NUEVO DISEÑO NEGRO + AZUL ELECTRICO */
+
+:root {
+  color-scheme: dark;
+  --azul: #138cff;
+  --azul-brillante: #28acff;
+  --azul-marino: #10284c;
+  --fondo: #070b13;
+  --tarjeta: #111d30;
+  --borde: #254a79;
+  --letra: #eff6ff;
+  --suave: #adc2dd;
+}
+
+body {
+  background: var(--fondo);
+  color: var(--letra);
+}
+
+/* BARRA DE NAVEGACION */
+
+.top {
+  background: #050b18;
+  border-bottom: 2px solid var(--azul);
+}
+
+.brand {
+  color: #f5f9ff;
+}
+
+.nav nav a:hover,
+.footer a:hover {
+  color: var(--azul-brillante);
+}
+
+.pill {
+  border: 1px solid #3975bd;
+  background: #10233c;
+  color: #f4f9ff;
+}
+
+.pill:hover {
+  background: #17416b;
+}
+
+/* PRESENTACION PRINCIPAL */
+
+.hero {
+  background:
+    radial-gradient(
+      ellipse at 82% 28%,
+      #07589b66 0%,
+      transparent 43%
+    ),
+    linear-gradient(
+      120deg,
+      #060b15,
+      #0e2446 62%,
+      #070e1e
+    );
+
+  border-bottom: 1px solid #123a6c;
+}
+
+.hero h1 em {
+  color: #28acff;
+}
+
+.hero p {
+  color: #c6d8ed;
+}
+
+.eyebrow,
+.eyebrow.dark {
+  color: #57b9ff;
+}
+
+.hero:after {
+  color: #47baff12;
+}
+
+.hero-highlights {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 28px;
+}
+
+.hero-highlights span {
+  padding: 9px 12px;
+  border: 1px solid #24598b;
+  border-radius: 999px;
+  background: #0b1c34a8;
+  color: #dfedff;
+  font-size: 13px;
+}
+
+/* BOTONES AZULES */
+
+.primary {
+  background: #087af2;
+  color: #fff;
+}
+
+.primary:hover {
+  background: #279dff;
+}
+
+/* CATALOGO */
+
+.section {
+  background: #080e1a;
+}
+
+.catalog-hint {
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+
+.product,
+.loginBox,
+.metrics article,
+.tableWrap,
+.order {
+  background: var(--tarjeta);
+  border-color: var(--borde);
+  color: var(--letra);
+}
+
+.product {
+  box-shadow: 0 9px 24px #0004;
+  transition: border-color .2s, transform .2s;
+}
+
+.product:hover {
+  border-color: #2f9aff;
+  transform: translateY(-2px);
+}
+
+/* FOTOGRAFIAS DE HOT WHEELS */
+
+.product .product-media {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1/1;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: #0b1424;
+  overflow: hidden;
+  color: #c9dcf2;
+  cursor: zoom-in;
+}
+
+.product .product-media:hover {
+  background: #0f2744;
+}
+
+.product .product-media img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  background: #0b1424;
+}
+
+.product .product-placeholder {
+  cursor: default;
+  gap: 8px;
+  font-size: 24px;
+}
+
+.product .product-placeholder span {
+  font-size: 12px;
+}
+
+.product .zoom-label {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  border-radius: 8px;
+  padding: 5px 8px;
+  background: #071329dc;
+  color: #e5f4ff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* INFORMACION DE PRODUCTOS */
+
+.tag {
+  background: #102f53;
+  color: #84cfff;
+}
+
+.desc,
+.muted,
+.footer,
+.metrics span {
+  color: var(--suave);
+}
+
+.stock {
+  color: #83e4b2;
+}
+
+.stock.out {
+  color: #ff8585;
+}
+
+.product button.add-cart {
+  background: #103e6c;
+  color: #cdeaff;
+}
+
+.product button.add-cart:hover {
+  background: #1763a4;
+}
+
+.product button.add-cart:disabled {
+  background: #1b2b3d;
+}
+
+.old {
+  color: #a2afc3;
+}
+
+/* UBICACION, PAGOS Y ENVIOS */
+
+.info-section {
+  padding: 54px 0 75px;
+  background: linear-gradient(
+    160deg,
+    #0b1528,
+    #07101e
+  );
+  border-top: 1px solid #18345a;
+}
+
+.info-section h2 {
+  margin: 10px 0;
+}
+
+.info-intro {
+  max-width: 680px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 26px;
+}
+
+.info-card {
+  border: 1px solid #27517e;
+  background: #10213b;
+  border-radius: 18px;
+  padding: 23px;
+}
+
+.info-icon {
+  font-size: 26px;
+}
+
+.info-card h3 {
+  margin: 14px 0 9px;
+  font-size: 18px;
+}
+
+.info-card p {
+  color: #c3d4ea;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+.info-card p:last-child {
+  margin-bottom: 0;
+}
+
+.info-card strong {
+  color: #edf6ff;
+}
+
+/* PIE DE PAGINA */
+
+.footer {
+  background: #070b13;
+  border-color: #23446a;
+  line-height: 1.6;
+}
+
+/* FORMULARIOS Y VENTANAS */
+
+dialog {
+  background: #101c30;
+  color: #f1f7ff;
+  border: 1px solid #28578a;
+}
+
+dialog::backdrop {
+  background: #020814d9;
+}
+
+.ghost {
+  color: #ecf6ff;
+}
+
+input,
+select,
+textarea {
+  color: #f2f8ff;
+  background: #091425;
+  border: 1px solid #35577e;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid #168eff;
+  outline-offset: 1px;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #8da9c8;
+}
+
+.cartLine,
+td,
+th {
+  border-color: #284568;
+}
+
+th {
+  background: #172a45;
+  color: #d6e8ff;
+}
+
+td button,
+.smallBtn {
+  background: #102a48;
+  border-color: #36689a;
+  color: #b6dcff;
+}
+
+.tabs {
+  border-color: #274a70;
+}
+
+.tabs button {
+  color: #a8bddb;
+}
+
+.tabs button.active {
+  color: #4cb1ff;
+  border-bottom-color: #168eff;
+}
+
+.notice {
+  background: #142e4d;
+  border-color: #2978bc;
+  color: #d5ebff;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 3px solid #45b8ff;
+  outline-offset: 3px;
+}
+
+/* VENTANA PARA AMPLIAR IMAGENES */
+
+.image-dialog {
+  width: min(960px, calc(100% - 24px));
+  max-height: 94dvh;
+  padding: 15px;
+}
+
+.image-dialog .dialogTitle {
+  gap: 18px;
+  margin-bottom: 10px;
+}
+
+.image-dialog h2 {
+  font-size: clamp(16px, 3vw, 23px);
+  line-height: 1.3;
+  margin: 0;
+}
+
+.image-dialog img {
+  display: block;
+  width: 100%;
+  max-height: 75dvh;
+  object-fit: contain;
+  background: #060c18;
+  border-radius: 10px;
+}
+
+.zoom-tip {
+  text-align: center;
+  margin: 10px 0 0;
+}
+
+/* ADAPTACION A CELULARES */
+
+@media (max-width: 800px) {
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nav {
+    flex-wrap: wrap;
+    padding: 12px 0;
+  }
+
+  .nav nav {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .hero-highlights {
+    gap: 7px;
+  }
+}
+
+@media (max-width: 620px) {
+  .nav {
+    min-height: 0;
+  }
+
+  .nav .brand {
+    font-size: 17px;
+  }
+
+  .nav nav {
+    font-size: 12px;
+    gap: 10px;
+  }
+
+  .hero h1 {
+    letter-spacing: -1.8px;
+  }
+
+  .hero-highlights span {
+    font-size: 11px;
+  }
+
+  .info-section {
+    padding: 42px 0;
+  }
+
+  .info-card {
+    padding: 18px;
+  }
+
+  .product .zoom-label {
+    font-size: 10px;
+    padding: 4px 6px;
+  }
+}
