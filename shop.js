@@ -1,14 +1,513 @@
-import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {SUPABASE_URL,SUPABASE_ANON_KEY,STORE_NAME,WHATSAPP_NUMBER} from './config.js';
-const $=s=>document.querySelector(s),money=n=>new Intl.NumberFormat('es-EC',{style:'currency',currency:'USD'}).format(n),escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-document.querySelectorAll('[data-store]').forEach(el=>el.textContent=STORE_NAME);
-const configured=SUPABASE_URL.startsWith('https://')&&!SUPABASE_ANON_KEY.includes('PEGA_AQUI');
-const db=configured?createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;
-let products=[],cart={};
-const price=p=>Math.round(Number(p.price)*(1-Number(p.discount_percent||0)/100)*100)/100;
-function render(){const query=$('#search').value.toLocaleLowerCase().trim(),cat=$('#category').value;const filtered=products.filter(p=>(!cat||p.category===cat)&&[p.name,p.description,p.category].join(' ').toLocaleLowerCase().includes(query));$('#status').textContent=filtered.length?`${filtered.length} producto(s) disponibles para consultar`:'No encontramos productos con ese filtro.';$('#products').innerHTML=filtered.map(p=>`<article class="product"><img src="${escape(p.image_url||'https://placehold.co/500x500/e8eef8/345080?text=Producto')}" alt="${escape(p.name)}" loading="lazy" referrerpolicy="no-referrer"><div class="info"><span class="tag">${escape(p.category||'Producto')}</span><h3>${escape(p.name)}</h3><p class="desc">${escape(p.description||'')}</p><div><span class="price">${money(price(p))}</span>${p.discount_percent?`<span class="old">${money(p.price)}</span>`:''}</div><p class="stock ${p.stock===0?'out':''}">${p.stock>0?`${p.stock} unidad(es) disponibles`:'Agotado'}</p><button data-add="${p.id}" ${p.stock===0?'disabled':''}>${p.stock===0?'No disponible':'+ Agregar al carrito'}</button></div></article>`).join('');document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{const p=products.find(x=>x.id===b.dataset.add);if(!p)return;cart[p.id]=Math.min(p.stock,(cart[p.id]||0)+1);updateCart();});}
-function updateCart(){Object.keys(cart).forEach(id=>{const p=products.find(x=>x.id===id);if(!p||p.stock<1)delete cart[id];else cart[id]=Math.min(cart[id],p.stock)});$('#cartCount').textContent=Object.values(cart).reduce((a,b)=>a+b,0);const entries=Object.entries(cart);$('#cartLines').innerHTML=entries.length?entries.map(([id,qty])=>{const p=products.find(x=>x.id===id);return `<div class="cartLine"><div><b>${escape(p.name)}</b><div class="muted">${money(price(p))} c/u</div></div><input class="qty" type="number" min="0" max="${p.stock}" value="${qty}" data-qty="${id}" aria-label="Cantidad de ${escape(p.name)}"><b>${money(price(p)*qty)}</b></div>`}).join(''):'Tu carrito está vacío.';$('#cartTotal').textContent=money(entries.reduce((sum,[id,qty])=>sum+price(products.find(p=>p.id===id))*qty,0));document.querySelectorAll('[data-qty]').forEach(el=>el.onchange=()=>{const q=Math.max(0,Math.min(Number(el.max),Math.floor(Number(el.value)||0)));q?cart[el.dataset.qty]=q:delete cart[el.dataset.qty];updateCart()});}
-$('#cartButton').onclick=()=>{$('#cartDialog').showModal();updateCart()};$('#closeCart').onclick=()=>$('#cartDialog').close();$('#search').oninput=render;$('#category').onchange=render;
-async function load(){if(!db){$('#status').textContent='Catálogo de muestra. Configura Supabase para publicar tus productos reales.';products=[{id:'ejemplo-1',name:'Nissan Skyline GT-R (R34)',category:'Mainline',description:'Ejemplo de ficha 1:64 · precios ilustrativos, no inventario real',price:5.00,discount_percent:10,stock:8,active:true,image_url:'https://placehold.co/640x640/151923/f7c647?text=Nissan+R34+%7C+1%3A64'},{id:'ejemplo-2',name:'Porsche 911 GT3 RS',category:'Premium',description:'Ejemplo de ficha 1:64 · reemplazar por tu propia fotografía',price:16.00,discount_percent:0,stock:3,active:true,image_url:'https://placehold.co/640x640/151923/f7c647?text=Porsche+911+%7C+1%3A64'},{id:'ejemplo-3',name:'Toyota Supra',category:'Treasure Hunt',description:'Ejemplo de producto agotado',price:9.50,discount_percent:0,stock:0,active:true,image_url:'https://placehold.co/640x640/151923/f7c647?text=Toyota+Supra+%7C+1%3A64'}];$('#checkoutStatus').textContent='Modo demostración: los pedidos no se guardan hasta conectar Supabase.';}else{const {data,error}=await db.from('products').select('*').eq('active',true).order('created_at',{ascending:false});if(error){$('#status').textContent='No se pudo cargar el catálogo: '+error.message;return}products=data||[]}const categories=[...new Set(products.map(p=>p.category).filter(Boolean))].sort();$('#category').innerHTML='<option value="">Todas las categorías</option>'+categories.map(c=>`<option value="${escape(c)}">${escape(c)}</option>`).join('');render();updateCart();}
-$('#checkout').onsubmit=async ev=>{ev.preventDefault();if(!db){$('#checkoutStatus').textContent='Conecta la base de datos antes de recibir pedidos.';return}const entries=Object.entries(cart);if(!entries.length){$('#checkoutStatus').textContent='Primero agrega productos.';return}if(!/^\d{10,15}$/.test(WHATSAPP_NUMBER)){$('#checkoutStatus').textContent='El dueño aún no ha configurado su número de WhatsApp. No es posible completar el pedido.';return}const btn=$('#checkout button[type=submit]');btn.disabled=true;$('#checkoutStatus').textContent='Registrando pedido…';try{const items=entries.map(([id,quantity])=>({id,quantity}));const {data,error}=await db.rpc('place_public_order',{p_customer_name:$('#customerName').value.trim(),p_customer_phone:$('#customerPhone').value.trim(),p_delivery_address:$('#customerAddress').value.trim(),p_notes:$('#customerNotes').value.trim(),p_items:items});if(error)throw error;const ref=String(data).slice(0,8).toUpperCase();const customer=$('#customerName').value.trim(),phone=$('#customerPhone').value.trim(),address=$('#customerAddress').value.trim(),notes=$('#customerNotes').value.trim();const orderLines=entries.map(([id,quantity])=>{const p=products.find(x=>x.id===id);return `• ${p.name} × ${quantity} — ${money(price(p)*quantity)}`;});const total=entries.reduce((sum,[id,qty])=>sum+price(products.find(p=>p.id===id))*qty,0);const msg=[`Hola, quiero confirmar mi pedido en ${STORE_NAME}.`,`Referencia: #${ref}`,`Cliente: ${customer}`,`Teléfono: ${phone}`,address?`Entrega: ${address}`:'',notes?`Notas: ${notes}`:'',...orderLines,`TOTAL: ${money(total)}`].filter(Boolean).join('\n');const url=`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;$('#checkoutStatus').textContent=`Pedido #${ref} registrado. Pulsa el enlace para enviarlo por WhatsApp (el envío no es automático). `;const link=document.createElement('a');link.href=url;link.target='_blank';link.rel='noopener noreferrer';link.textContent='Abrir WhatsApp y enviar pedido';$('#checkoutStatus').append(link);cart={};updateCart();$('#checkout').reset();window.open(url,'_blank','noopener,noreferrer');await load();}catch(e){$('#checkoutStatus').textContent='No se pudo enviar el pedido: '+e.message}finally{btn.disabled=false}};
-load();
+
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import {
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY,
+  STORE_NAME,
+  WHATSAPP_NUMBER
+} from './config.js';
+
+const $ = selector => document.querySelector(selector);
+
+const money = value => new Intl.NumberFormat('es-EC', {
+  style: 'currency',
+  currency: 'USD'
+}).format(Number(value) || 0);
+
+const escapeHTML = value =>
+  String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[char]));
+
+// FOTOGRAFIAS SEGURAS
+function safeImage(url) {
+  if (!url) return null;
+
+  try {
+    const parsed = new URL(String(url), window.location.href);
+    return ['http:', 'https:'].includes(parsed.protocol)
+      ? parsed.href
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+// CONEXION CON SUPABASE
+document.querySelectorAll('[data-store]').forEach(el => {
+  el.textContent = STORE_NAME;
+});
+
+const configured =
+  SUPABASE_URL.startsWith('https://') &&
+  !SUPABASE_ANON_KEY.includes('PEGA_AQUI');
+
+const db = configured
+  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
+let products = [];
+let cart = {};
+
+const price = product => Math.round(
+  Number(product.price) *
+  (1 - Number(product.discount_percent || 0) / 100) *
+  100
+) / 100;
+
+// MOSTRAR PRODUCTOS
+function render() {
+  const query = $('#search').value.toLocaleLowerCase().trim();
+  const category = $('#category').value;
+
+  const filtered = products.filter(product =>
+    (!category || product.category === category) &&
+    [product.name, product.description, product.category]
+      .join(' ')
+      .toLocaleLowerCase()
+      .includes(query)
+  );
+
+  $('#status').textContent = filtered.length
+    ? `${filtered.length} producto(s) disponibles para consultar`
+    : 'No encontramos productos con ese filtro.';
+
+  $('#products').innerHTML = filtered.map(product => {
+    const imageUrl = safeImage(product.image_url);
+    const stock = Number(product.stock) || 0;
+
+    const photo = imageUrl
+      ? `
+        <button
+          type="button"
+          class="product-media"
+          data-zoom="${escapeHTML(product.id)}"
+          aria-label="Ampliar fotografía de ${escapeHTML(product.name)}"
+          title="Toca para ampliar"
+        >
+          <img
+            src="${escapeHTML(imageUrl)}"
+            alt="${escapeHTML(product.name)}"
+            loading="lazy"
+            referrerpolicy="no-referrer"
+          >
+          <span class="zoom-label">⌕ Ampliar foto</span>
+        </button>
+      `
+      : `
+        <div class="product-media product-placeholder"
+          aria-label="Sin fotografía disponible">
+          📷
+          <span>Fotografía pendiente</span>
+        </div>
+      `;
+
+    return `
+      <article class="product">
+        ${photo}
+
+        <div class="info">
+          <span class="tag">
+            ${escapeHTML(product.category || 'Producto')}
+          </span>
+
+          <h3>${escapeHTML(product.name)}</h3>
+
+          <p class="desc">
+            ${escapeHTML(product.description || '')}
+          </p>
+
+          <div>
+            <span class="price">${money(price(product))}</span>
+            ${Number(product.discount_percent) > 0
+              ? `<span class="old">${money(product.price)}</span>`
+              : ''}
+          </div>
+
+          <p class="stock ${stock <= 0 ? 'out' : ''}">
+            ${stock > 0
+              ? `${stock} unidad(es) disponibles`
+              : 'Agotado'}
+          </p>
+
+          <button
+            type="button"
+            class="add-cart"
+            data-add="${escapeHTML(product.id)}"
+            ${stock <= 0 ? 'disabled' : ''}
+          >
+            ${stock <= 0
+              ? 'No disponible'
+              : '+ Agregar al carrito'}
+          </button>
+        </div>
+      </article>
+    `;
+  }).join('');
+
+  // AGREGAR AL CARRITO
+  document.querySelectorAll('[data-add]').forEach(button => {
+    button.onclick = () => {
+      const product = products.find(
+        item => String(item.id) === button.dataset.add
+      );
+
+      if (!product) return;
+
+      cart[product.id] = Math.min(
+        Number(product.stock),
+        (cart[product.id] || 0) + 1
+      );
+
+      updateCart();
+    };
+  });
+
+  // AMPLIAR FOTOGRAFIA
+  document.querySelectorAll('[data-zoom]').forEach(button => {
+    button.onclick = () => {
+      const product = products.find(
+        item => String(item.id) === button.dataset.zoom
+      );
+
+      const url = product
+        ? safeImage(product.image_url)
+        : null;
+
+      if (!product || !url) return;
+
+      $('#zoomImage').src = url;
+      $('#zoomImage').alt = product.name;
+      $('#zoomName').textContent = product.name;
+      $('#imageDialog').showModal();
+    };
+  });
+}
+
+// CERRAR FOTOGRAFIA AMPLIADA
+$('#closeImage').onclick = () => {
+  $('#imageDialog').close();
+};
+
+$('#imageDialog').addEventListener('click', event => {
+  if (event.target === $('#imageDialog')) {
+    $('#imageDialog').close();
+  }
+});
+
+// ACTUALIZAR CARRITO
+function updateCart() {
+  Object.keys(cart).forEach(id => {
+    const product = products.find(
+      item => String(item.id) === id
+    );
+
+    if (!product || Number(product.stock) < 1) {
+      delete cart[id];
+    } else {
+      cart[id] = Math.min(
+        cart[id],
+        Number(product.stock)
+      );
+    }
+  });
+
+  $('#cartCount').textContent =
+    Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+
+  const entries = Object.entries(cart);
+
+  $('#cartLines').innerHTML = entries.length
+    ? entries.map(([id, qty]) => {
+        const product = products.find(
+          item => String(item.id) === id
+        );
+
+        return `
+          <div class="cartLine">
+            <div>
+              <b>${escapeHTML(product.name)}</b>
+              <div class="muted">
+                ${money(price(product))} c/u
+              </div>
+            </div>
+
+            <input
+              class="qty"
+              type="number"
+              min="0"
+              max="${Number(product.stock)}"
+              value="${qty}"
+              data-qty="${escapeHTML(id)}"
+              aria-label="Cantidad de ${escapeHTML(product.name)}"
+            >
+
+            <b>${money(price(product) * qty)}</b>
+          </div>
+        `;
+      }).join('')
+    : 'Tu carrito está vacío.';
+
+  $('#cartTotal').textContent = money(
+    entries.reduce((sum, [id, qty]) => {
+      const product = products.find(
+        item => String(item.id) === id
+      );
+      return sum + price(product) * qty;
+    }, 0)
+  );
+
+  document.querySelectorAll('[data-qty]').forEach(input => {
+    input.onchange = () => {
+      const qty = Math.max(
+        0,
+        Math.min(
+          Number(input.max),
+          Math.floor(Number(input.value) || 0)
+        )
+      );
+
+      if (qty) {
+        cart[input.dataset.qty] = qty;
+      } else {
+        delete cart[input.dataset.qty];
+      }
+
+      updateCart();
+    };
+  });
+}
+
+// BOTONES DEL CARRITO Y FILTROS
+$('#cartButton').onclick = () => {
+  updateCart();
+  $('#cartDialog').showModal();
+};
+
+$('#closeCart').onclick = () => {
+  $('#cartDialog').close();
+};
+
+$('#search').oninput = render;
+$('#category').onchange = render;
+
+// CARGAR PRODUCTOS DESDE SUPABASE
+async function load() {
+  if (!db) {
+    $('#status').textContent =
+      'Configura Supabase para publicar tu catálogo.';
+
+    products = [];
+    render();
+    updateCart();
+    return;
+  }
+
+  const { data, error } = await db
+    .from('products')
+    .select('*')
+    .eq('active', true)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    $('#status').textContent =
+      'No se pudo cargar el catálogo: ' + error.message;
+    return;
+  }
+
+  products = data || [];
+
+  const categories = [
+    ...new Set(
+      products.map(p => p.category).filter(Boolean)
+    )
+  ].sort();
+
+  $('#category').innerHTML =
+    '<option value="">Todas las categorías</option>' +
+    categories.map(c => `
+      <option value="${escapeHTML(c)}">
+        ${escapeHTML(c)}
+      </option>
+    `).join('');
+
+  render();
+  updateCart();
+}
+
+// FORMAS DE PAGO
+const paymentLabels = {
+  pichincha: 'Transferencia Banco Pichincha',
+  produbanco: 'Transferencia Produbanco',
+  efectivo: 'Efectivo (a coordinar)'
+};
+
+// FORMAS DE ENTREGA
+const deliveryLabels = {
+  ambato: 'Entrega coordinada en Ambato',
+  nacional: 'Envío nacional (costo por confirmar)'
+};
+
+$('#deliveryMethod').onchange = () => {
+  const needsAddress =
+    $('#deliveryMethod').value === 'nacional';
+
+  $('#customerAddress').required = needsAddress;
+};
+
+// REGISTRAR PEDIDO Y ENVIAR A WHATSAPP
+$('#checkout').onsubmit = async event => {
+  event.preventDefault();
+
+  if (!db) {
+    $('#checkoutStatus').textContent =
+      'Conecta Supabase antes de recibir pedidos.';
+    return;
+  }
+
+  const entries = Object.entries(cart);
+
+  if (!entries.length) {
+    $('#checkoutStatus').textContent =
+      'Primero agrega productos.';
+    return;
+  }
+
+  if (!/^\d{10,15}$/.test(WHATSAPP_NUMBER)) {
+    $('#checkoutStatus').textContent =
+      'El número de WhatsApp de la tienda no está configurado.';
+    return;
+  }
+
+  const payment = paymentLabels[$('#paymentMethod').value];
+  const delivery = deliveryLabels[$('#deliveryMethod').value];
+
+  const address = $('#customerAddress').value.trim();
+  const notes = $('#customerNotes').value.trim();
+
+  if (!payment || !delivery) {
+    $('#checkoutStatus').textContent =
+      'Selecciona forma de entrega y pago.';
+    return;
+  }
+
+  if (
+    $('#deliveryMethod').value === 'nacional' &&
+    !address
+  ) {
+    $('#checkoutStatus').textContent =
+      'Indica tu ciudad y dirección para el envío.';
+    return;
+  }
+
+  const button = $('#checkout button[type="submit"]');
+  button.disabled = true;
+
+  $('#checkoutStatus').textContent = 'Registrando pedido…';
+
+  try {
+    const customer = $('#customerName').value.trim();
+    const phone = $('#customerPhone').value.trim();
+
+    const items = entries.map(([id, quantity]) => ({
+      id,
+      quantity
+    }));
+
+    // Guardamos pago y entrega en las notas existentes.
+    const orderNotes = [
+      `Pago: ${payment}`,
+      `Entrega: ${delivery}`,
+      notes ? `Notas: ${notes}` : ''
+    ].filter(Boolean).join(' | ');
+
+    const { data, error } = await db.rpc(
+      'place_public_order',
+      {
+        p_customer_name: customer,
+        p_customer_phone: phone,
+        p_delivery_address: address,
+        p_notes: orderNotes,
+        p_items: items
+      }
+    );
+
+    if (error) throw error;
+
+    const ref = String(data).slice(0, 8).toUpperCase();
+
+    const orderLines = entries.map(([id, quantity]) => {
+      const product = products.find(
+        item => String(item.id) === id
+      );
+
+      return `• ${product.name} × ${quantity} — ${money(
+        price(product) * quantity
+      )}`;
+    });
+
+    const total = entries.reduce((sum, [id, qty]) => {
+      const product = products.find(
+        item => String(item.id) === id
+      );
+
+      return sum + price(product) * qty;
+    }, 0);
+
+    const message = [
+      `Hola, quiero confirmar mi pedido en ${STORE_NAME}.`,
+      `Referencia: #${ref}`,
+      `Cliente: ${customer}`,
+      `Teléfono: ${phone}`,
+      `Entrega: ${delivery}`,
+      address ? `Dirección: ${address}` : '',
+      `Forma de pago: ${payment}`,
+      notes ? `Observaciones: ${notes}` : '',
+      ...orderLines,
+      `TOTAL PRODUCTOS: ${money(total)}`,
+      'El costo de envío, si corresponde, queda por confirmar.'
+    ].filter(Boolean).join('\n');
+
+    const url =
+      `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+
+    $('#checkoutStatus').textContent =
+      `Pedido #${ref} registrado. `;
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.textContent =
+      'Abrir WhatsApp para enviar el pedido';
+
+    $('#checkoutStatus').append(link);
+
+    cart = {};
+    updateCart();
+    $('#checkout').reset();
+    $('#customerAddress').required = false;
+
+    window.open(url, '_blank', 'noopener,noreferrer');
+
+    await load();
+
+  } catch (error) {
+    $('#checkoutStatus').textContent =
+      'No se pudo registrar el pedido: ' +
+      error.message;
+
+  } finally {
+    button.disabled = false;
+  }
+};
+
+// INICIAR CATALOGO
+load().catch(error => {
+  $('#status').textContent =
+    'Error al cargar productos: ' + error.message;
+});
