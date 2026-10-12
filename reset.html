@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Restablecer contraseña | Darth Vader tienda Hotwheels</title>
+<style>
+*{box-sizing:border-box}body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#131a27;color:#f6f8ff;min-height:100vh;display:grid;place-items:center;margin:0;padding:20px}main{width:min(100%,460px);background:#1c2636;border:1px solid #344154;padding:32px;border-radius:16px}h1{font-size:1.7rem;margin:8px 0 12px}.eyebrow{color:#f9ca49;text-transform:uppercase;letter-spacing:.13em;font-weight:700;font-size:.8rem}p{line-height:1.5;color:#c4cde0}label{display:block;margin:18px 0 6px;font-weight:600}input{display:block;width:100%;border:1px solid #526075;border-radius:10px;padding:14px;background:#0f1826;color:#fff;font-size:16px}button{margin-top:22px;display:block;width:100%;border:0;border-radius:11px;background:#f9ca49;color:#111827;font-weight:800;padding:14px;cursor:pointer;font-size:16px}button:disabled{opacity:.5;cursor:not-allowed}a{color:#f9ca49}#status{min-height:3em}
+</style>
+</head>
+<body><main><div class="eyebrow">Darth Vader tienda Hotwheels</div><h1>Nueva contraseña</h1><p>Abre esta página desde el enlace de recuperación que recibiste por correo. Luego escribe tu nueva contraseña.</p><form id="form" hidden><label for="pass">Nueva contraseña (mínimo 8 caracteres)</label><input id="pass" type="password" minlength="8" autocomplete="new-password" required><label for="confirm">Repite la contraseña</label><input id="confirm" type="password" minlength="8" autocomplete="new-password" required><button id="submit" type="submit">Guardar contraseña</button></form><p id="status" role="status">Validando enlace de recuperación…</p><p><a href="./admin.html">Volver al panel de administración</a></p></main>
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './config.js';
+const supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{detectSessionInUrl:true,persistSession:true}});
+const form=document.getElementById('form');const status=document.getElementById('status');const submit=document.getElementById('submit');
+const params=new URLSearchParams(location.hash.slice(1));const query=new URLSearchParams(location.search);
+const isRecovery=params.get('type')==='recovery'||query.get('type')==='recovery'||!!params.get('access_token')||!!query.get('code');
+let usable=false;
+function showSession(){usable=true;form.hidden=false;status.textContent='Enlace válido. Escribe tu nueva contraseña.';}
+supabase.auth.onAuthStateChange((event,session)=>{if(event==='PASSWORD_RECOVERY'&&session)showSession();});
+(async()=>{
+ const {data,error}=await supabase.auth.getSession();
+ if(error){status.textContent='No se pudo validar el enlace: '+error.message;return;}
+ if(data.session&&isRecovery){showSession();return;}
+ if(!usable){status.textContent='No hay un enlace de recuperación válido. Vuelve a Supabase y solicita un correo nuevo después de configurar Site URL.';}
+})();
+form.addEventListener('submit',async e=>{e.preventDefault();if(!usable)return;const pw=document.getElementById('pass').value;const confirmation=document.getElementById('confirm').value;if(pw!==confirmation){status.textContent='Las contraseñas no coinciden.';return}submit.disabled=true;status.textContent='Guardando contraseña…';const {error}=await supabase.auth.updateUser({password:pw});if(error){status.textContent='No se pudo guardar: '+error.message;submit.disabled=false;return}form.hidden=true;status.innerHTML='Contraseña actualizada. Ya puedes <a href="./admin.html">iniciar sesión en tu panel</a>.';await supabase.auth.signOut();});
+</script></body></html>
