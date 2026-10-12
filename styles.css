@@ -469,3 +469,13 @@ button:focus-visible {
     padding: 4px 6px;
   }
 }
+
+/* Mostrar acceso al administrador en celulares */
+
+@media (max-width: 620px) {
+  .admin-link {
+    display: inline-block !important;
+    color: #38b6ff;
+    font-weight: bold;
+  }
+}
