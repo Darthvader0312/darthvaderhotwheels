@@ -1,15 +1,30 @@
-import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
-import {SUPABASE_URL,SUPABASE_ANON_KEY,STORE_NAME} from './config.js';
-const $=s=>document.querySelector(s),escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),money=n=>new Intl.NumberFormat('es-EC',{style:'currency',currency:'USD'}).format(n);
-document.querySelectorAll('[data-store]').forEach(el=>el.textContent=STORE_NAME);
-const configured=SUPABASE_URL.startsWith('https://')&&!SUPABASE_ANON_KEY.includes('PEGA_AQUI');const db=configured?createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null;let products=[],orders=[];
-if(!db){$('#setupNotice').hidden=false;$('#setupNotice').textContent='Primero conecta tu proyecto Supabase en config.js. Consulta INSTRUCCIONES.md.';$('#loginForm button').disabled=true;}
-function status(s){$('#adminStatus').textContent=s}
-async function session(){if(!db)return;const {data:{user}}=await db.auth.getUser();if(!user){$('#loginSection').hidden=false;$('#dashboard').hidden=true;$('#logout').hidden=true;return}const {data:allowed,error}=await db.rpc('is_store_admin');if(error||!allowed){await db.auth.signOut();$('#loginStatus').textContent='Esta cuenta no está autorizada como administradora.';return}$('#loginSection').hidden=true;$('#dashboard').hidden=false;$('#logout').hidden=false;await refresh();}
-$('#loginForm').onsubmit=async e=>{e.preventDefault();if(!db)return;$('#loginStatus').textContent='Verificando…';const {error}=await db.auth.signInWithPassword({email:$('#email').value,password:$('#password').value});if(error){$('#loginStatus').textContent=error.message;return}$('#loginStatus').textContent='';await session()};$('#logout').onclick=async()=>{await db.auth.signOut();await session()};
-async function refresh(){const [p,o]=await Promise.all([db.from('products').select('*').order('created_at',{ascending:false}),db.from('orders').select('*').order('created_at',{ascending:false}).limit(200)]);if(p.error||o.error){status('Error: '+(p.error?.message||o.error?.message));return}products=p.data||[];orders=o.data||[];$('#statProducts').textContent=products.length;$('#statStock').textContent=products.reduce((s,p)=>s+p.stock,0);$('#statOrders').textContent=orders.length;status('');renderProducts();renderOrders();}
-function renderProducts(){$('#productRows').innerHTML=products.length?products.map(p=>`<tr><td><b>${escape(p.name)}</b><div class="tiny muted">${escape(p.category||'Sin categoría')}</div></td><td>${money(p.price)}</td><td>${p.discount_percent}%</td><td>${p.stock}</td><td>${p.active?'Sí':'No'}</td><td><button data-edit="${p.id}">Editar</button><button class="danger" data-delete="${p.id}">Eliminar</button></td></tr>`).join(''):'<tr><td colspan="6">Aún no hay productos. Crea el primero.</td></tr>';document.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>openProduct(products.find(p=>p.id===b.dataset.edit)));document.querySelectorAll('[data-delete]').forEach(b=>b.onclick=async()=>{if(!confirm('¿Eliminar este producto? No se puede deshacer.'))return;const {error}=await db.from('products').delete().eq('id',b.dataset.delete);if(error)alert(error.message);await refresh()});}
-function renderOrders(){$('#orderRows').innerHTML=orders.length?orders.map(o=>`<article class="order"><header><div><b>Pedido #${o.id.slice(0,8).toUpperCase()}</b><div class="muted tiny">${new Date(o.created_at).toLocaleString('es-EC')}</div></div><strong>${money(o.total)}</strong></header><p><b>${escape(o.customer_name)}</b> · ${escape(o.customer_phone)}<br>${escape(o.delivery_address||'Sin dirección')}<br>${escape(o.notes||'')}</p><ul>${(Array.isArray(o.items)?o.items:[]).map(i=>`<li>${escape(i.name)} × ${i.quantity} — ${money(i.unit_price*i.quantity)}</li>`).join('')}</ul><label>Estado<select data-order="${o.id}">${['pendiente','confirmado','preparando','entregado','cancelado'].map(s=>`<option value="${s}" ${o.status===s?'selected':''}>${s}</option>`).join('')}</select></label><p class="muted tiny">El stock se descuenta cuando confirmas el pedido. Si cancelas uno ya confirmado, deberás reponerlo manualmente.</p></article>`).join(''):'<p class="muted">Todavía no hay pedidos.</p>';document.querySelectorAll('[data-order]').forEach(el=>el.onchange=async()=>{const {error}=await db.rpc('change_order_status',{p_order_id:el.dataset.order,p_new_status:el.value});if(error)alert('No se pudo actualizar: '+error.message);await refresh()});}
-function openProduct(p){$('#productForm').reset();$('#productId').value=p?.id||'';$('#productModalTitle').textContent=p?'Editar producto':'Nuevo producto';$('#pName').value=p?.name||'';$('#pCategory').value=p?.category||'';$('#pDescription').value=p?.description||'';$('#pImage').value=p?.image_url||'';$('#pPrice').value=p?.price??'';$('#pDiscount').value=p?.discount_percent??0;$('#pStock').value=p?.stock??0;$('#pActive').checked=p?.active??true;$('#productStatus').textContent='';$('#productDialog').showModal()};$('#newProduct').onclick=()=>openProduct();$('#closeProduct').onclick=()=>$('#productDialog').close();
-$('#productForm').onsubmit=async e=>{e.preventDefault();const payload={name:$('#pName').value.trim(),category:$('#pCategory').value.trim(),description:$('#pDescription').value.trim(),image_url:$('#pImage').value.trim()||null,price:Number($('#pPrice').value),discount_percent:Number($('#pDiscount').value),stock:Number($('#pStock').value),active:$('#pActive').checked};const id=$('#productId').value;const {error}=id?await db.from('products').update(payload).eq('id',id):await db.from('products').insert(payload);if(error){$('#productStatus').textContent=error.message;return}$('#productDialog').close();await refresh()};
-document.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));['productPanel','orderPanel'].forEach(id=>$('#'+id).hidden=b.dataset.tab!==id)});session();
+
+<!-- Subir fotografía del producto -->
+<label>Fotografía del Hot Wheels
+  <input
+    id="pImageFile"
+    type="file"
+    accept="image/jpeg,image/png,image/webp"
+  >
+</label>
+
+<p class="muted tiny">
+  Selecciona una fotografía desde tu celular o computadora.
+</p>
+
+<!-- Campo de imagen que utiliza el sistema actual -->
+<label>URL de imagen (opcional)
+  <input
+    id="pImage"
+    type="url"
+    placeholder="https://..."
+  >
+</label>
+
+<!-- Vista previa de la fotografía -->
+<img
+  id="pImagePreview"
+  alt="Vista previa del Hot Wheels"
+  style="display:none;width:100%;max-height:220px;object-fit:contain;border-radius:12px;"
+>
+    
