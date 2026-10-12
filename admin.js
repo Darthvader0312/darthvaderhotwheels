@@ -30,10 +30,11 @@ const MAX_IMAGE_BYTES = 50 * 1024 * 1024;
 
 const validTypes = {
   'image/jpeg': 'jpg',
+  'image/jpg': 'jpg',
+  'image/pjpeg': 'jpg',
   'image/png': 'png',
+  'image/x-png': 'png',
   'image/webp': 'webp'
-};
-
 const configured =
   SUPABASE_URL.startsWith('https://') &&
   !SUPABASE_ANON_KEY.includes('PEGA_AQUI');
