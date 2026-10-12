@@ -1,24 +1,32 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { SUPABASE_URL, SUPABASE_ANON_KEY, STORE_NAME } from './config.js';
+import {
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY,
+  STORE_NAME
+} from './config.js';
 
+// CONFIGURACION GENERAL
 const $ = selector => document.querySelector(selector);
 
-const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, char => ({
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-  "'": '&#39;'
-}[char]));
+const escapeHTML = value =>
+  String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[char]));
 
-const money = amount => new Intl.NumberFormat('es-EC', {
-  style: 'currency',
-  currency: 'USD'
-}).format(Number(amount) || 0);
+const money = amount =>
+  new Intl.NumberFormat('es-EC', {
+    style: 'currency',
+    currency: 'USD'
+  }).format(Number(amount) || 0);
 
+// LIMITE DE FOTOGRAFIAS: 50 MB
 const BUCKET = 'product-images';
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_IMAGE_BYTES = 50 * 1024 * 1024;
 
 const validTypes = {
   'image/jpeg': 'jpg',
@@ -26,7 +34,8 @@ const validTypes = {
   'image/webp': 'webp'
 };
 
-const configured = SUPABASE_URL.startsWith('https://') &&
+const configured =
+  SUPABASE_URL.startsWith('https://') &&
   !SUPABASE_ANON_KEY.includes('PEGA_AQUI');
 
 const db = configured
@@ -37,6 +46,7 @@ let products = [];
 let orders = [];
 let previewObjectURL = null;
 
+// NOMBRE DE LA TIENDA
 document.querySelectorAll('[data-store]').forEach(el => {
   el.textContent = STORE_NAME;
 });
@@ -44,7 +54,7 @@ document.querySelectorAll('[data-store]').forEach(el => {
 if (!db) {
   $('#setupNotice').hidden = false;
   $('#setupNotice').textContent =
-    'Revisa los datos de Supabase en config.js.';
+    'Revisa la conexion con Supabase en config.js.';
   $('#loginForm button').disabled = true;
 }
 
@@ -52,12 +62,15 @@ function status(message) {
   $('#adminStatus').textContent = message;
 }
 
-// INICIO DE SESIÓN DEL ADMINISTRADOR
+// INICIO DE SESION
 
 async function session() {
   if (!db) return;
 
-  const { data: { user }, error } = await db.auth.getUser();
+  const {
+    data: { user },
+    error
+  } = await db.auth.getUser();
 
   if (error || !user) {
     $('#loginSection').hidden = false;
@@ -80,7 +93,7 @@ async function session() {
 
     $('#loginStatus').textContent =
       permissionError?.message ||
-      'Esta cuenta no está autorizada como administradora.';
+      'Esta cuenta no esta autorizada como administradora.';
     return;
   }
 
@@ -93,6 +106,7 @@ async function session() {
 
 $('#loginForm').onsubmit = async event => {
   event.preventDefault();
+
   if (!db) return;
 
   $('#loginStatus').textContent = 'Verificando...';
@@ -113,6 +127,7 @@ $('#loginForm').onsubmit = async event => {
 
 $('#logout').onclick = async () => {
   if (!db) return;
+
   await db.auth.signOut();
   await session();
 };
@@ -132,7 +147,10 @@ async function refresh() {
   ]);
 
   if (p.error || o.error) {
-    status('Error: ' + (p.error?.message || o.error?.message));
+    status(
+      'Error: ' +
+      (p.error?.message || o.error?.message)
+    );
     return;
   }
 
@@ -142,7 +160,8 @@ async function refresh() {
   $('#statProducts').textContent = products.length;
 
   $('#statStock').textContent = products.reduce(
-    (sum, p) => sum + Number(p.stock || 0), 0
+    (sum, p) => sum + Number(p.stock || 0),
+    0
   );
 
   $('#statOrders').textContent = orders.length;
@@ -152,7 +171,7 @@ async function refresh() {
   renderOrders();
 }
 
-// MOSTRAR INVENTARIO
+// INVENTARIO DE PRODUCTOS
 
 function renderProducts() {
   $('#productRows').innerHTML = products.length
@@ -164,56 +183,76 @@ function renderProducts() {
               src="${escapeHTML(p.image_url)}"
               alt=""
               loading="lazy"
-              style="width:54px;height:54px;object-fit:contain;vertical-align:middle;margin-right:8px;border-radius:7px;"
+              style="
+                width:54px;
+                height:54px;
+                object-fit:contain;
+                vertical-align:middle;
+                margin-right:8px;
+                border-radius:7px;
+              "
             >
           ` : ''}
 
           <b>${escapeHTML(p.name)}</b>
 
           <div class="tiny muted">
-            ${escapeHTML(p.category || 'Sin categoría')}
+            ${escapeHTML(p.category || 'Sin categoria')}
           </div>
         </td>
 
         <td>${money(p.price)}</td>
         <td>${Number(p.discount_percent || 0)}%</td>
         <td>${Number(p.stock || 0)}</td>
-        <td>${p.active ? 'Sí' : 'No'}</td>
+        <td>${p.active ? 'Si' : 'No'}</td>
 
         <td>
-          <button data-edit="${p.id}">Editar</button>
-          <button class="danger" data-delete="${p.id}">
+          <button data-edit="${escapeHTML(p.id)}">
+            Editar
+          </button>
+
+          <button
+            class="danger"
+            data-delete="${escapeHTML(p.id)}"
+          >
             Eliminar
           </button>
         </td>
       </tr>
     `).join('')
-    : '<tr><td colspan="6">Todavía no hay productos.</td></tr>';
+    : '<tr><td colspan="6">Todavia no hay productos.</td></tr>';
 
   document.querySelectorAll('[data-edit]').forEach(button => {
-    button.onclick = () => openProduct(
-      products.find(p => String(p.id) === button.dataset.edit)
-    );
+    button.onclick = () => {
+      const product = products.find(
+        p => String(p.id) === button.dataset.edit
+      );
+
+      if (product) openProduct(product);
+    };
   });
 
   document.querySelectorAll('[data-delete]').forEach(button => {
     button.onclick = async () => {
       if (!confirm(
-        '¿Eliminar este producto? Esta acción no se puede deshacer.'
+        'Eliminar este producto? No se puede deshacer.'
       )) return;
 
-      const { error } = await db.from('products')
+      const { error } = await db
+        .from('products')
         .delete()
         .eq('id', button.dataset.delete);
 
-      if (error) alert(error.message);
+      if (error) {
+        alert(error.message);
+      }
 
       await refresh();
     };
   });
 }
 
-// MOSTRAR Y ADMINISTRAR PEDIDOS
+// ADMINISTRACION DE PEDIDOS
 
 function renderOrders() {
   $('#orderRows').innerHTML = orders.length
@@ -221,19 +260,27 @@ function renderOrders() {
       <article class="order">
         <header>
           <div>
-            <b>Pedido #${escapeHTML(String(o.id).slice(0, 8).toUpperCase())}</b>
+            <b>
+              Pedido #${escapeHTML(
+                String(o.id).slice(0, 8).toUpperCase()
+              )}
+            </b>
+
             <div class="muted tiny">
               ${new Date(o.created_at).toLocaleString('es-EC')}
             </div>
           </div>
+
           <strong>${money(o.total)}</strong>
         </header>
 
         <p>
           <b>${escapeHTML(o.customer_name)}</b>
           · ${escapeHTML(o.customer_phone)}
-          <br>${escapeHTML(o.delivery_address || 'Sin dirección')}
-          <br>${escapeHTML(o.notes || '')}
+          <br>
+          ${escapeHTML(o.delivery_address || 'Sin direccion')}
+          <br>
+          ${escapeHTML(o.notes || '')}
         </p>
 
         <ul>
@@ -247,7 +294,7 @@ function renderOrders() {
         </ul>
 
         <label>Estado
-          <select data-order="${o.id}">
+          <select data-order="${escapeHTML(o.id)}">
             ${[
               'pendiente',
               'confirmado',
@@ -255,8 +302,10 @@ function renderOrders() {
               'entregado',
               'cancelado'
             ].map(s => `
-              <option value="${s}"
-                ${o.status === s ? 'selected' : ''}>
+              <option
+                value="${s}"
+                ${o.status === s ? 'selected' : ''}
+              >
                 ${s}
               </option>
             `).join('')}
@@ -265,18 +314,22 @@ function renderOrders() {
 
         <p class="muted tiny">
           El stock se descuenta al confirmar el pedido.
-          Si cancelas uno confirmado, debes reponer el stock manualmente.
+          Si cancelas uno confirmado, deberas reponerlo
+          manualmente.
         </p>
       </article>
     `).join('')
-    : '<p class="muted">Todavía no hay pedidos.</p>';
+    : '<p class="muted">Todavia no hay pedidos.</p>';
 
   document.querySelectorAll('[data-order]').forEach(el => {
     el.onchange = async () => {
-      const { error } = await db.rpc('change_order_status', {
-        p_order_id: el.dataset.order,
-        p_new_status: el.value
-      });
+      const { error } = await db.rpc(
+        'change_order_status',
+        {
+          p_order_id: el.dataset.order,
+          p_new_status: el.value
+        }
+      );
 
       if (error) {
         alert('No se pudo actualizar: ' + error.message);
@@ -287,7 +340,7 @@ function renderOrders() {
   });
 }
 
-// VISTA PREVIA DE FOTOGRAFÍAS
+// VISTA PREVIA DE FOTOGRAFIAS
 
 function showPreview(url) {
   const img = $('#pImagePreview');
@@ -308,12 +361,13 @@ function clearTemporaryPreview() {
   }
 }
 
-// ABRIR FORMULARIO DEL PRODUCTO
+// ABRIR FORMULARIO DE PRODUCTOS
 
 function openProduct(product = null) {
   clearTemporaryPreview();
 
   $('#productForm').reset();
+
   $('#productId').value = product?.id || '';
 
   $('#productModalTitle').textContent = product
@@ -336,7 +390,7 @@ function openProduct(product = null) {
   $('#productDialog').showModal();
 }
 
-// SELECCIONAR FOTOGRAFÍA DESDE LA GALERÍA
+// SELECCIONAR FOTOGRAFIA DESDE LA GALERIA
 
 $('#pImageFile').addEventListener('change', () => {
   clearTemporaryPreview();
@@ -344,8 +398,30 @@ $('#pImageFile').addEventListener('change', () => {
   const file = $('#pImageFile').files[0];
 
   if (file) {
+    if (!validTypes[file.type]) {
+      $('#productStatus').textContent =
+        'Solo se permiten imagenes JPG, PNG o WebP.';
+      $('#pImageFile').value = '';
+      showPreview($('#pImage').value.trim());
+      return;
+    }
+
+    if (file.size > MAX_IMAGE_BYTES) {
+      $('#productStatus').textContent =
+        'La fotografia no debe superar los 50 MB.';
+      $('#pImageFile').value = '';
+      showPreview($('#pImage').value.trim());
+      return;
+    }
+
+    $('#productStatus').textContent =
+      'Fotografia seleccionada: ' +
+      (file.size / 1024 / 1024).toFixed(2) +
+      ' MB';
+
     previewObjectURL = URL.createObjectURL(file);
     showPreview(previewObjectURL);
+
   } else {
     showPreview($('#pImage').value.trim());
   }
@@ -368,15 +444,20 @@ $('#productDialog').addEventListener(
   clearTemporaryPreview
 );
 
-// SUBIR LA FOTOGRAFÍA A SUPABASE STORAGE
+// SUBIR FOTOGRAFIAS A SUPABASE STORAGE
+// PERMITE HASTA 50 MB
 
 async function uploadImage(file) {
   if (!validTypes[file.type]) {
-    throw new Error('La foto debe ser JPG, PNG o WebP.');
+    throw new Error(
+      'La fotografia debe ser JPG, PNG o WebP.'
+    );
   }
 
   if (file.size > MAX_IMAGE_BYTES) {
-    throw new Error('La fotografía no debe superar 5 MB.');
+    throw new Error(
+      'La fotografia no debe superar los 50 MB.'
+    );
   }
 
   const {
@@ -385,7 +466,9 @@ async function uploadImage(file) {
   } = await db.auth.getUser();
 
   if (userError || !user) {
-    throw new Error('Debes iniciar sesión otra vez.');
+    throw new Error(
+      'Debes iniciar sesion nuevamente.'
+    );
   }
 
   const fileName =
@@ -401,7 +484,7 @@ async function uploadImage(file) {
 
   if (error) {
     throw new Error(
-      'No se pudo subir la fotografía: ' + error.message
+      'No se pudo subir la fotografia: ' + error.message
     );
   }
 
@@ -412,15 +495,19 @@ async function uploadImage(file) {
   return data.publicUrl;
 }
 
-// GUARDAR O EDITAR PRODUCTOS
+// GUARDAR Y EDITAR PRODUCTOS
 
 $('#productForm').onsubmit = async event => {
   event.preventDefault();
 
-  const button = $('#productForm button[type="submit"]');
+  const button = $(
+    '#productForm button[type="submit"]'
+  );
 
   button.disabled = true;
-  $('#productStatus').textContent = 'Guardando producto...';
+
+  $('#productStatus').textContent =
+    'Guardando producto...';
 
   try {
     let imageUrl = $('#pImage').value.trim() || null;
@@ -429,7 +516,7 @@ $('#productForm').onsubmit = async event => {
 
     if (file) {
       $('#productStatus').textContent =
-        'Subiendo fotografía a Supabase...';
+        'Subiendo fotografia a Supabase...';
 
       imageUrl = await uploadImage(file);
     }
@@ -454,38 +541,44 @@ $('#productForm').onsubmit = async event => {
       : await db.from('products')
           .insert(payload);
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
 
     $('#productDialog').close();
-
     await refresh();
 
   } catch (error) {
     $('#productStatus').textContent =
-      error.message || 'Error al guardar el producto.';
+      error.message ||
+      'Error al guardar el producto.';
 
   } finally {
     button.disabled = false;
   }
 };
 
-// CAMBIAR ENTRE PRODUCTOS Y PEDIDOS
+// PESTANAS PRODUCTOS Y PEDIDOS
 
 document.querySelectorAll('[data-tab]').forEach(button => {
   button.onclick = () => {
     document.querySelectorAll('[data-tab]').forEach(other => {
-      other.classList.toggle('active', other === button);
+      other.classList.toggle(
+        'active',
+        other === button
+      );
     });
 
     ['productPanel', 'orderPanel'].forEach(id => {
-      $('#' + id).hidden = button.dataset.tab !== id;
+      $('#' + id).hidden =
+        button.dataset.tab !== id;
     });
   };
 });
 
-// INICIAR EL PANEL
+// INICIAR ADMINISTRADOR
 
 session().catch(error => {
   $('#loginStatus').textContent =
-    'Error de conexión: ' + error.message;
+    'Error de conexion: ' + error.message;
 });
